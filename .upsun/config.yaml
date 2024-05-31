@@ -1,3 +1,10 @@
+services:
+  postgresql:
+    type: postgresql:15
+    configuration:
+      extensions:
+        - vector
+
 applications:
   watches-next:
     stack:
@@ -29,9 +36,7 @@ applications:
       post_deploy: |
         set -eux
         python vectorize/vectorize.py
-services:
-  postgresql:
-    type: postgresql:15
+
 routes:
   "https://{default}/":
     type: upstream
