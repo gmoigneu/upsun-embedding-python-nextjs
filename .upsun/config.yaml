@@ -1,6 +1,6 @@
 services:
   postgresql:
-    type: postgresql:15
+    type: postgresql:16
     configuration:
       extensions:
         - vector
