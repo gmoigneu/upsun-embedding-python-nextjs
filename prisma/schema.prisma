@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model watches {
+  id                Int                    @id @default(autoincrement())
+  brand             String?                @db.VarChar(255)
+  model             String?                @db.VarChar(255)
+  case_material     String?                @db.VarChar(255)
+  strap_material    String?                @db.VarChar(255)
+  movement_type     String?                @db.VarChar(255)
+  water_resistance  String?                @db.VarChar(255)
+  case_diameter_mm  Decimal?               @db.Decimal
+  case_thickness_mm Decimal?               @db.Decimal
+  band_width_mm     Decimal?               @db.Decimal
+  dial_color        String?                @db.VarChar(255)
+  crystal_material  String?                @db.VarChar(255)
+  complications     String?                @db.VarChar(255)
+  power_reserve     String?                @db.VarChar(255)
+  price_usd         Int?
+  embedding         Unsupported("vector(1536)")?
+
+  @@index([embedding], name: "embedding_idx")
+}

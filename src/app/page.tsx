@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useChat } from 'ai/react';
 import { use, useEffect, useState } from 'react';
-import Markdown from 'react-markdown';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function Chat() {
   const { messages, input, handleInputChange, handleSubmit } = useChat();
@@ -37,7 +38,11 @@ export default function Chat() {
             >Find a watch!</Button>
         </form>
         <div className="p-4 rounded-sm my-8 bg-gray-100 prose lg:prose-md w-full text-left">
-          <Markdown className="w-full">{answer}</Markdown>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+          >
+            {answer}
+          </ReactMarkdown>
         </div>
       </div>
     </div>
