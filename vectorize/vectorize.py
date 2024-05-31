@@ -40,7 +40,7 @@ def prepare_database(conn, cur):
 
 def main():
     client = OpenAI()
-    client.api_key = os.getenv('OPENAI_API_KEY')
+    client.api_key = os.getenv('OPENAI_KEY')
 
     conn = psycopg2.connect(
             dbname=os.getenv('DB_PATH'),

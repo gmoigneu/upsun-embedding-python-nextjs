@@ -26,7 +26,7 @@ applications:
         npm run build
         cd vectorize/
         pip install -r requirements.txt
-      deploy: |
+      post_deploy: |
         set -eux
         python vectorize/vectorize.py
 services:
