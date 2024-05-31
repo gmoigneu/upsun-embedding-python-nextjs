@@ -14,3 +14,8 @@ type Watch = {
     power_reserve: string;
     price_usd: number;
 };
+
+type Message = {
+    role: string;
+    content: string;
+};

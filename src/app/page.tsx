@@ -2,24 +2,33 @@
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { useChat } from 'ai/react';
-import { use, useEffect, useState } from 'react';
+import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { recommend } from './actions';
+import { readStreamableValue } from 'ai/rsc';
 
 export default function Chat() {
-  const { messages, input, handleInputChange, handleSubmit } = useChat();
   const [answer, setAnswer] = useState('');
+  const [prompt, setPrompt] = useState('');
   const [isStreaming, setIsStreaming] = useState(false)
 
-  useEffect(() => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.role === 'assistant') {
-        setAnswer(lastMessage.content);
+  const handleSubmit = async (e :any) => {
+    e.preventDefault();
+    setAnswer('');
+    setIsStreaming(true);
+    const { output } = await recommend([
+      {
+        role: 'user',
+        content: prompt
       }
+    ]);
+
+    for await (const delta of readStreamableValue(output)) {
+      setAnswer(currentGeneration => `${currentGeneration}${delta}`);
     }
-  }, [messages])
+    setIsStreaming(false);
+  };
   
   return (
     <div className="flex flex-col w-full max-w-xl py-24 mx-auto stretch">
@@ -27,14 +36,14 @@ export default function Chat() {
         <h1 className="text-4xl mb-8 text-center">⌚ Watch Finder</h1>
         <form onSubmit={handleSubmit}>
           <Textarea 
-            value={input}
-            onChange={handleInputChange}
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
             placeholder="Describe the watch you are looking for..." 
             />
           <Button 
             type="submit"
             className='w-full mt-4'
-            disabled={isStreaming || input === ''}
+            disabled={isStreaming || prompt === ''}
             >Find a watch!</Button>
         </form>
         { answer.length > 0 && (
