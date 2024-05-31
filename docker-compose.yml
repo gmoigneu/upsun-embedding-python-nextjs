@@ -1,0 +1,35 @@
+services:
+    pgsql:
+        build:
+            context: ./docker/pgsql
+            dockerfile: postgres.Dockerfile
+        ports:
+            - '${FORWARD_DB_PORT:-5432}:5432'
+        environment:
+            PGPASSWORD: 'watches'
+            POSTGRES_DB: 'watches'
+            POSTGRES_USER: 'watches'
+            POSTGRES_PASSWORD: 'watches'
+        volumes:
+            - 'watches-pgsql:/var/lib/postgresql/data'
+            - './docker/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql'
+            - './docker/pgsql/vector-extension.sql:/docker-entrypoint-initdb.d/11-vector-extension.sql'
+        networks:
+            - watches
+        healthcheck:
+            test:
+                - CMD
+                - pg_isready
+                - '-q'
+                - '-d'
+                - 'watches'
+                - '-U'
+                - 'watches'
+            retries: 3
+            timeout: 5s
+networks:
+    watches:
+        driver: bridge
+volumes:
+    watches-pgsql:
+        driver: local
