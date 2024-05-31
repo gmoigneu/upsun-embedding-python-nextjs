@@ -37,13 +37,15 @@ export default function Chat() {
             disabled={isStreaming || input === ''}
             >Find a watch!</Button>
         </form>
-        <div className="p-4 rounded-sm my-8 bg-gray-100 prose lg:prose-md w-full text-left">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-          >
-            {answer}
-          </ReactMarkdown>
-        </div>
+        { answer.length > 0 && (
+          <div className="p-4 rounded-sm my-8 bg-gray-100 prose lg:prose-md w-full text-left">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+            >
+              {answer}
+            </ReactMarkdown>
+          </div>
+        )}
       </div>
     </div>
   );
