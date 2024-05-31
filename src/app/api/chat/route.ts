@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   });
 
   // Query the database for similar watches
-  const watches = await prisma.$queryRaw`
+  const watches: Watch[] = await prisma.$queryRaw`
     SELECT
       brand,
       model,
