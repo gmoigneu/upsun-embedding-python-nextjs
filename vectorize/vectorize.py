@@ -1,16 +1,17 @@
 import pandas as pd
-from openai import OpenAI
+from sentence_transformers import SentenceTransformer
 import psycopg2
 import os
 from decimal import Decimal
 import re
 from pprint import pprint
 
-def generate_embeddings(client, data):
+def generate_embeddings(data):
     # Generate embeddings for the extracted data
-    response = client.embeddings.create(model="text-embedding-3-small", input=data)
+    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+    embeddings = model.encode(data)
     # Return the embeddings
-    return response.data
+    return embeddings
 
 def prepare_database(conn, cur):
     # cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
@@ -32,16 +33,13 @@ def prepare_database(conn, cur):
         "complications VARCHAR(255) NULL,"
         "power_reserve VARCHAR(255) NULL,"
         "price_usd INT NULL,"    
-        "embedding vector(1536) NULL)"
+        "embedding vector(384) NULL)"
     )
     # Empty table
     cur.execute('TRUNCATE TABLE watches')
     conn.commit()
 
 def main():
-    client = OpenAI()
-    client.api_key = os.getenv('OPENAI_API_KEY')
-
     conn = psycopg2.connect(
             dbname=os.getenv('DB_PATH'),
             user=os.getenv('DB_USERNAME'),
@@ -68,7 +66,7 @@ def main():
         extracted_data.append(extract)
 
     # Generate embeddings for the extracted data
-    embeddings = generate_embeddings(client, extracted_data)
+    embeddings = generate_embeddings(extracted_data)
 
     # Store the watch and the embedding in pgsql
     for index, row in df.iterrows():
@@ -89,7 +87,7 @@ def main():
                 row.loc['Complications'],
                 row.loc['Power Reserve'],
                 int(re.sub("[^0-9.]", "", row.loc['Price (USD)'])),
-                embeddings[index].embedding)
+                embeddings[index].tolist())
         )
         conn.commit()
 

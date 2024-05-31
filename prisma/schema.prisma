@@ -24,7 +24,7 @@ model watches {
   complications     String?                @db.VarChar(255)
   power_reserve     String?                @db.VarChar(255)
   price_usd         Int?
-  embedding         Unsupported("vector(1536)")?
+  embedding         Unsupported("vector(384)")?
 
   @@index([embedding], name: "embedding_idx")
 }

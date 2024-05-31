@@ -1,15 +1,16 @@
 import prisma from '@/lib/prisma';
 import { openai } from '@ai-sdk/openai';
-import { embed, streamText } from 'ai';
+import { streamText } from 'ai';
 import { extract, toMarkdown } from '@/lib/format';
+import { HfInference } from '@huggingface/inference';
 
 export async function POST(req: Request) {
   const { messages } = await req.json();
 
-  // Let's create the embedding for our query
-  const embedding = await embed({
-    model: openai.embedding('text-embedding-3-small'),
-    value: messages[messages.length - 1].content,
+  const inference = new HfInference(process.env.HUGGINGFACE_TOKEN);
+  const embedding = await inference.featureExtraction({
+    model: "sentence-transformers/all-MiniLM-L6-v2",
+    inputs: messages[messages.length - 1].content,
   });
 
   // Query the database for similar watches
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
       complications,
       power_reserve,
       price_usd,
-      1 - (embedding <=> ${embedding.embedding}::vector) as similarity
+      1 - (embedding <=> ${embedding}::vector) as similarity
     FROM watches
     ORDER BY  similarity DESC
     LIMIT 5;
