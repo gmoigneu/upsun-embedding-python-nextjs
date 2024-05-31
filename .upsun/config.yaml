@@ -30,6 +30,7 @@ applications:
       build: |
         set -eux
         npm i
+        npx prisma generate
         npm run build
         cd vectorize/
         pip install -r requirements.txt
