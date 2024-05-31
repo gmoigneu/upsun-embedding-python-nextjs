@@ -13,7 +13,7 @@ def generate_embeddings(client, data):
     return response.data
 
 def prepare_database(conn, cur):
-    cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
+    # cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
     # Create the table if it doesn't exist
     cur.execute(
         "CREATE TABLE IF NOT EXISTS watches ("
