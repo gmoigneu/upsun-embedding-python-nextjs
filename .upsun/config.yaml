@@ -35,7 +35,8 @@ applications:
         pip install -r requirements.txt
       post_deploy: |
         set -eux
-        python vectorize/vectorize.py
+        cd vectorize/
+        python vectorize.py
 
 routes:
   "https://{default}/":
