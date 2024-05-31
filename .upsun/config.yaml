@@ -1,0 +1,38 @@
+applications:
+  watches-next:
+    stack:
+      - "nodejs@22"
+      - "python@3.12"
+    source:
+      root: "/"
+    relationships:
+      postgresql: "postgresql:postgresql"
+    mounts:
+      "/.npm":
+        source: "storage"
+        source_path: "npm"
+    web:
+      commands:
+        start: "npx next start -p $PORT"
+      upstream:
+        socket_family: tcp
+      locations:
+        "/":
+          passthru: true
+    hooks:
+      build: |
+        set -eux
+        npm i
+        npm run build
+        cd vectorize/
+        pip install -r requirements.txt
+      deploy: |
+        set -eux
+        python vectorize/vectorize.py
+services:
+  postgresql:
+    type: postgresql:15
+routes:
+  "https://{default}/":
+    type: upstream
+    upstream: "watches-next:http"
