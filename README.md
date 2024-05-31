@@ -1,6 +1,7 @@
 # Embeddings example running on Upsun.com
 
-## Prepare our python virtualenv
+## To run it locally
+### Prepare our python virtualenv
 
 ```
 cd vectorize
@@ -9,13 +10,21 @@ source ./venv/bin/activate
 pip install
 ```
 
-## To run it locally
+### Install dependencies and run services
 
 ```
 docker-compose up
 cd vectorize/
-DATABASE_PATH=watches DATABASE_HOST=127.0.0.1 DATABASE_USERNAME=watches DATABASE_PASSWORD=watches OPENAI_API_KEY=sk-proj-****** python3 vectorize.py
+DB_PATH=watches DB_HOST=127.0.0.1 DB_USERNAME=watches DB_PASSWORD=watches OPENAI_API_KEY=sk-proj-****** python3 vectorize.py
 cd ../
 npm install
 npm rum dev
+```
+
+## To deploy on Upsun
+
+```
+upsun project:create
+upsun variable:create --name OPENAI_API_KEY --prefix env: --level project
+upsun push
 ```
