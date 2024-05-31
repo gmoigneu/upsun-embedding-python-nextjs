@@ -57,7 +57,7 @@ def main():
     # Create an empty array to store the extracted data
     extracted_data = []
 
-    df = pd.read_csv('data/watches-short.csv')
+    df = pd.read_csv('data/watches-full.csv')
     # Loop over df and print each row with a : separator between columns
     for index, row in df.iterrows():
         # Add a : separator between the column name and value
