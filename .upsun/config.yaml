@@ -19,6 +19,9 @@ applications:
       "/.npm":
         source: "storage"
         source_path: "npm"
+      "/.cache":
+        source: "storage"
+        source_path: "cache"
     web:
       commands:
         start: "npx next start -p $PORT"
