@@ -6,19 +6,46 @@ services:
         - vector
 
 applications:
+  ollama:
+    stack:
+      - "python@3.12"
+      - "ollama"
+    container_profile: BALANCED
+    relationships:
+      db: "postgresql:postgresql"
+    mounts:
+      "/.ollama":
+        source: "storage"
+        source_path: ".ollama"
+    web:
+      commands:
+        start: "OLLAMA_HOST=:$PORT ollama serve"
+    hooks:
+      build: |
+        set -eux
+        cd vectorize/
+        pip install -r requirements.txt
+      deploy: |
+        set -eux
+        set -a
+        . /app/.env
+        export OLLAMA_HOST=:$PORT
+        ollama pull $EMBEDDING_MODEL
+        ollama pull $CHAT_MODEL
+
+        cd vectorize/
+        python vectorize.py
+
   app:
     stack:
       - "nodejs@22"
-      - "python@3.12"
     relationships:
       db: "postgresql:postgresql"
+      ollama: "ollama:http"
     mounts:
       "/.npm":
         source: "storage"
         source_path: "npm"
-      "/.cache":
-        source: "storage"
-        source_path: "cache"
     web:
       commands:
         start: "npx next start -p $PORT"
@@ -28,12 +55,6 @@ applications:
         npm install
         npx prisma generate
         npm run build
-        cd vectorize/
-        pip install -r requirements.txt
-      post_deploy: |
-        set -eux
-        cd vectorize/
-        python vectorize.py
 
 routes:
   "https://{default}/":
