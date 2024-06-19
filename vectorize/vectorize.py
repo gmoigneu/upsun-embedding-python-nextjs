@@ -1,16 +1,9 @@
-from sentence_transformers import SentenceTransformer
+import ollama
 import psycopg2
 import os
 from decimal import Decimal
 import re
 import csv
-
-def generate_embeddings(data):
-    # Generate embeddings for the extracted data
-    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-    embeddings = model.encode(data)
-    # Return the embeddings
-    return embeddings
 
 def prepare_database(conn, cur):
     # cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
@@ -51,28 +44,11 @@ def main():
 
     prepare_database(conn, cur);
 
-    # Create an empty array to store the extracted data
-    extracted_data = []
-
     # Loop over df and print each row with a : separator between columns
     with open('data/watches-full.csv', 'r', encoding='utf-8-sig') as file:
         reader = csv.DictReader(file)
         for row in reader:
-            # Add a : separator between the column name and value
             extract = [f"{column}: {value}" for column, value in row.items()]
-            # Join the columns into a single string
-            extract = "\r\n".join(extract)
-            # Append the extract to the extracted_data array
-            extracted_data.append(extract)
-
-    # Generate embeddings for the extracted data
-    embeddings = generate_embeddings(extracted_data)
-
-    # Store the watch and the embedding in pgsql
-    with open('data/watches-full.csv', 'r', encoding='utf-8-sig') as file:
-        reader = csv.DictReader(file)
-        index = 0
-        for row in reader:
             cur.execute(
                 'INSERT INTO watches ("brand", "model", "case_material", "strap_material", "movement_type", "water_resistance", "case_diameter_mm", "case_thickness_mm", "band_width_mm", "dial_color", "crystal_material", "complications", "power_reserve", "price_usd", "embedding") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
                 (
@@ -90,10 +66,10 @@ def main():
                     row['Complications'],
                     row['Power Reserve'],
                     int(re.sub("[^0-9.]", "", row['Price (USD)'])),
-                    embeddings[index].tolist()
+                    ollama.embeddings(model=os.getenv('EMBEDDING_MODEL'), prompt="\n".join(extract))['embedding'],
                 )
             )
-            ++index
+
     conn.commit()
 
     # Close the cursor and connection

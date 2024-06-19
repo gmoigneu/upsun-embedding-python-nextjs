@@ -2,15 +2,13 @@
 import prisma from '@/lib/prisma';
 import { extract, toMarkdown } from '@/lib/format';
 import { HfInference } from '@huggingface/inference';
+import { Ollama } from 'ollama'
 import { createStreamableValue } from 'ai/rsc';
 
 export async function recommend(messages: Message[]) {
-  
-  const inference = new HfInference(process.env.HUGGINGFACE_TOKEN);
-  const embedding = await inference.featureExtraction({
-    model: "sentence-transformers/all-MiniLM-L6-v2",
-    inputs: messages[messages.length - 1].content,
-  });
+
+  const ollama = new Ollama({ host: (process.env.OLLAMA_SCHEME || 'http')+'://'+(process.env.OLLAMA_HOST || 'localhost')+':'+(process.env.OLLAMA_PORT || 11434) })
+  const embedding = (await ollama.embeddings({ model: process.env.EMBEDDING_MODEL || 'not-defined', prompt: messages[messages.length - 1].content }))['embedding']
 
   // Query the database for similar watches
   const watches: Watch[] = await prisma.$queryRaw`
