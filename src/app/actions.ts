@@ -37,15 +37,21 @@ export async function recommend(messages: Message[]) {
   
   const stream = createStreamableValue('');
   (async () => {
+
+    // Update the stream with all the watches[0] properties in a markdown table
+    stream.append(toMarkdown(watches[0]))
+    stream.append(`\n\n\n\n`)
+
     for await (const chunk of inference.chatCompletionStream({
       model: "mistralai/Mistral-7B-Instruct-v0.2",
       messages: [
         {
           'role': 'user',
-          'content': `You are an helpful AI that will recommend watches to the user. The watch selected is below with its attributes as a list. Your response is a markdown document.First, output the brand and model of the watch as a title.  Second, send the user a bullet list view of the watch attributes without doing any modification. Then, add a paragrah of why this watch matches their request using the watch attributes. The recommended watch is: ${toMarkdown(watches[0])}. Create a table of the following data titled as alternatives: ${watches.map((watch: Watch) => extract(watch)).join('\n')}`
+          'content': `You are an helpful AI that will recommend watches to the user. The watch selected is below with its attributes as a list. Your response is a markdown document. Write a paragrah of why this watch matches their request using the watch attributes. The recommended watch is: ${toMarkdown(watches[0])}. Create a table of the following data titled as alternatives: ${watches.map((watch: Watch) => extract(watch)).join('\n')}`
         }
       ],
-      max_tokens: 400
+      max_tokens: 500,
+      temperature: 0,
     })) {
       stream.update(chunk.choices[0].delta.content!);
     }
