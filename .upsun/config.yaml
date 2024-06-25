@@ -14,7 +14,7 @@ applications:
     source:
       root: "/"
     relationships:
-      postgresql: "postgresql:postgresql"
+      db: "postgresql:postgresql"
     mounts:
       "/.npm":
         source: "storage"
