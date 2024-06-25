@@ -1,10 +1,9 @@
-import pandas as pd
 from sentence_transformers import SentenceTransformer
 import psycopg2
 import os
 from decimal import Decimal
 import re
-from pprint import pprint
+import csv
 
 def generate_embeddings(data):
     # Generate embeddings for the extracted data
@@ -41,12 +40,12 @@ def prepare_database(conn, cur):
 
 def main():
     conn = psycopg2.connect(
-            dbname=os.getenv('DB_PATH'),
-            user=os.getenv('DB_USERNAME'),
-            password=os.getenv('DB_PASSWORD'),
-            host=os.getenv('DB_HOST'),
-            port=os.getenv('DB_PORT')
-        )
+        dbname=os.getenv('DB_PATH'),
+        user=os.getenv('DB_USERNAME'),
+        password=os.getenv('DB_PASSWORD'),
+        host=os.getenv('DB_HOST'),
+        port=os.getenv('DB_PORT')
+    )
 
     cur = conn.cursor()
 
@@ -55,41 +54,47 @@ def main():
     # Create an empty array to store the extracted data
     extracted_data = []
 
-    df = pd.read_csv('data/watches-full.csv')
     # Loop over df and print each row with a : separator between columns
-    for index, row in df.iterrows():
-        # Add a : separator between the column name and value
-        extract = [f"{column}: {value}" for column, value in row.items()]
-        # Join the columns into a single string
-        extract = "\r\n".join(extract)
-        # Append the extract to the extracted_data array
-        extracted_data.append(extract)
+    with open('data/watches-full.csv', 'r', encoding='utf-8-sig') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            # Add a : separator between the column name and value
+            extract = [f"{column}: {value}" for column, value in row.items()]
+            # Join the columns into a single string
+            extract = "\r\n".join(extract)
+            # Append the extract to the extracted_data array
+            extracted_data.append(extract)
 
     # Generate embeddings for the extracted data
     embeddings = generate_embeddings(extracted_data)
 
     # Store the watch and the embedding in pgsql
-    for index, row in df.iterrows():
-        cur.execute(
-            'INSERT INTO watches ("brand", "model", "case_material", "strap_material", "movement_type", "water_resistance", "case_diameter_mm", "case_thickness_mm", "band_width_mm", "dial_color", "crystal_material", "complications", "power_reserve", "price_usd", "embedding") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
-            (
-                row.loc['Brand'],
-                row.loc['Model'],
-                row.loc['Case Material'],
-                row.loc['Strap Material'],
-                row.loc['Movement Type'],
-                row.loc['Water Resistance'],
-                Decimal(row.loc['Case Diameter (mm)']),
-                Decimal(row.loc['Case Thickness (mm)']),
-                Decimal(row.loc['Band Width (mm)']),
-                row.loc['Dial Color'],
-                row.loc['Crystal Material'],
-                row.loc['Complications'],
-                row.loc['Power Reserve'],
-                int(re.sub("[^0-9.]", "", row.loc['Price (USD)'])),
-                embeddings[index].tolist())
-        )
-        conn.commit()
+    with open('data/watches-full.csv', 'r', encoding='utf-8-sig') as file:
+        reader = csv.DictReader(file)
+        index = 0
+        for row in reader:
+            cur.execute(
+                'INSERT INTO watches ("brand", "model", "case_material", "strap_material", "movement_type", "water_resistance", "case_diameter_mm", "case_thickness_mm", "band_width_mm", "dial_color", "crystal_material", "complications", "power_reserve", "price_usd", "embedding") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                (
+                    row['Brand'],
+                    row['Model'],
+                    row['Case Material'],
+                    row['Strap Material'],
+                    row['Movement Type'],
+                    row['Water Resistance'],
+                    Decimal(row['Case Diameter (mm)']),
+                    Decimal(row['Case Thickness (mm)']),
+                    Decimal(row['Band Width (mm)']),
+                    row['Dial Color'],
+                    row['Crystal Material'],
+                    row['Complications'],
+                    row['Power Reserve'],
+                    int(re.sub("[^0-9.]", "", row['Price (USD)'])),
+                    embeddings[index].tolist()
+                )
+            )
+            ++index
+    conn.commit()
 
     # Close the cursor and connection
     cur.close()
