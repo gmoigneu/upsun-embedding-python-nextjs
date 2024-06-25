@@ -6,13 +6,10 @@ services:
         - vector
 
 applications:
-  watches-next:
+  app:
     stack:
       - "nodejs@22"
       - "python@3.12"
-      - "openssl"
-    source:
-      root: "/"
     relationships:
       db: "postgresql:postgresql"
     mounts:
@@ -25,15 +22,10 @@ applications:
     web:
       commands:
         start: "npx next start -p $PORT"
-      upstream:
-        socket_family: tcp
-      locations:
-        "/":
-          passthru: true
     hooks:
       build: |
         set -eux
-        npm i
+        npm install
         npx prisma generate
         npm run build
         cd vectorize/
@@ -46,4 +38,4 @@ applications:
 routes:
   "https://{default}/":
     type: upstream
-    upstream: "watches-next:http"
+    upstream: "app:http"

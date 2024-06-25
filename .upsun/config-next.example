@@ -1,0 +1,15 @@
+applications:
+  app:
+    stack:
+      - "nodejs@22"
+    mounts:
+      "/.npm":
+        source: "storage"
+        source_path: "npm"
+    web:
+      commands:
+        start: "npx next start -p $PORT"
+    hooks:
+      build: |
+        npm install
+        npm run build
