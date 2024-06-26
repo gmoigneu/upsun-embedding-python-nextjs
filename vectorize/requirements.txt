@@ -13,7 +13,6 @@ mpmath==1.3.0
 networkx==3.3
 numpy==1.26.4
 packaging==24.0
-pandas==2.2.2
 pillow==10.3.0
 psycopg2-binary==2.9.9
 python-dateutil==2.9.0.post0
