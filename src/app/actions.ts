@@ -8,6 +8,8 @@ export async function recommend(messages: Message[]) {
 
   const prompt = messages[messages.length - 1].content
   
+  const prompt = messages[messages.length - 1].content
+
   const inference = new HfInference(process.env.HUGGINGFACE_TOKEN);
   const embedding = await inference.featureExtraction({
     model: "sentence-transformers/all-MiniLM-L6-v2",
