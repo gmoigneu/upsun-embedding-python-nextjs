@@ -5,11 +5,13 @@ import { HfInference } from '@huggingface/inference';
 import { createStreamableValue } from 'ai/rsc';
 
 export async function recommend(messages: Message[]) {
+
+  const prompt = messages[messages.length - 1].content
   
   const inference = new HfInference(process.env.HUGGINGFACE_TOKEN);
   const embedding = await inference.featureExtraction({
     model: "sentence-transformers/all-MiniLM-L6-v2",
-    inputs: messages[messages.length - 1].content,
+    inputs: prompt,
   });
 
   // Query the database for similar watches
@@ -47,11 +49,11 @@ export async function recommend(messages: Message[]) {
       messages: [
         {
           'role': 'user',
-          'content': `You are an helpful AI that will recommend watches to the user. The watch selected is below with its attributes as a list. Your response is a markdown document. Write a paragrah of why this watch matches their request using the watch attributes. The recommended watch is: ${toMarkdown(watches[0])}. Create a table of the following data titled as alternatives: ${watches.map((watch: Watch) => extract(watch)).join('\n')}`
+          'content': `You are an helpful AI that will recommend watches to the user. The user asked us to find a watch that matches this request: ${prompt}. You will address the user directly. The selected watch is below with its attributes as a list. Your response is a markdown document. Write a paragrah of why this watch matches their request using the watch attributes. The recommended watch is: ${toMarkdown(watches[0])}. Create a table of the following data titled as alternatives: ${watches.map((watch: Watch) => extract(watch)).join('\n')}`
         }
       ],
-      max_tokens: 500,
-      temperature: 0,
+      max_tokens: 1000,
+      temperature: 1,
     })) {
       stream.update(chunk.choices[0].delta.content!);
     }
