@@ -40,23 +40,56 @@ export async function recommend(messages: Message[]) {
   const stream = createStreamableValue('');
   (async () => {
 
-    // Update the stream with all the watches[0] properties in a markdown table
-    stream.append(toMarkdown(watches[0]))
-    stream.append(`\n\n\n\n`)
+    const watch = toMarkdown(watches[0])
+    const messages = [
+      {
+        'role': 'user',
+        'content': `You are an helpful AI that will recommend watches to the user. Your responses are formatted as Markdown documents.` + prompt,
+      },
+      {
+        'role': 'assistant',
+        'content': `
+Here is the watch that I would recommend:
 
+${watch}
+        `,
+      },
+      {
+        'role': 'user',
+        'content': `Based on my initial request, can you very briefly justify why you think this watch is a good fit for me in one paragraph?`
+      }
+    ]
+    let answer = ''
     for await (const chunk of inference.chatCompletionStream({
       model: "mistralai/Mistral-7B-Instruct-v0.2",
-      messages: [
-        {
-          'role': 'user',
-          'content': `You are an helpful AI that will recommend watches to the user. The user asked us to find a watch that matches this request: ${prompt}. You will address the user directly. The selected watch is below with its attributes as a list. Your response is a markdown document. Write a paragrah of why this watch matches their request using the watch attributes. The recommended watch is: ${toMarkdown(watches[0])}. Create a table of the following data titled as alternatives: ${watches.map((watch: Watch) => extract(watch)).join('\n')}`
-        }
-      ],
-      max_tokens: 1000,
-      temperature: 1,
+      messages: messages,
+      max_tokens: 500,
+      temperature: 0,
+    })) {
+      stream.update(chunk.choices[0].delta.content!);
+      answer += chunk.choices[0].delta.content!;
+    }
+
+    messages.push({
+      'role': 'assistant',
+      'content': answer,
+    });
+
+    // Update the stream with all the watches[0] properties in a markdown table
+    stream.update(`\n\n---\n` + watch + `\n---\n`)
+    messages.push({
+      'role': 'user',
+      'content': `Create a table of the following data titled as alternatives: ${watches.map((watch: Watch) => extract(watch)).join('\n')}. Don't add any other information. Do not comment.`,
+    });
+    for await (const chunk of inference.chatCompletionStream({
+      model: "mistralai/Mistral-7B-Instruct-v0.2",
+      messages: messages,
+      max_tokens: 500,
+      temperature: 0,
     })) {
       stream.update(chunk.choices[0].delta.content!);
     }
+
     stream.done();
   })();
 
